@@ -94,14 +94,14 @@ def main():
 			break
 	pool.terminate()
 
-	with open("{}_{}".format(args.output, "terms.csv"), "w") as o:
+	with open("{}_{}".format(args.output, "terms.csv"), "wb") as o:
 		w = csv.writer(o, encoding='utf-8')
 		w.writerow(("token", "frequency", "total", "idf"))
 		for token, freq in tokens_c.most_common():
 			w.writerow([token, freq, articles, math.log(float(articles) / freq)])
 
 	if args.stem:
-		with open("{}_{}".format(args.output, "stems.csv"), "w") as o:
+		with open("{}_{}".format(args.output, "stems.csv"), "wb") as o:
 			w = csv.writer(o, encoding='utf-8')
 			w.writerow(("stem", "frequency", "total", "idf", "most_freq_term"))
 			for s, freq in stems_c.most_common():
