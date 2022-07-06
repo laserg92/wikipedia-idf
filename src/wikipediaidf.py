@@ -23,17 +23,17 @@ def filter_tokens(tokens):
 
 def stem(tokens):
 	global stemmer
-	stems = []
+	stems = set()
 	token_to_stem_mapping = dict()
 
 	for t in tokens:
 		s = stemmer.stem(t)
-		stems.append(s)
+		stems.add(s)
 		if s not in token_to_stem_mapping:
 			token_to_stem_mapping[s] = Counter()
 		token_to_stem_mapping[s][t] += 1
 
-	return set(stems), token_to_stem_mapping
+	return stems, token_to_stem_mapping
 
 
 def get_file_reader(filename):
