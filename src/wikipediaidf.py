@@ -57,6 +57,7 @@ def process_line(line):
 	tokens = set(filter_tokens(word_tokenize(article_json["text"])))
 	stems, token_to_stem_mapping = stem(tokens) if stemmer else None, None
 	logging.info("stems3: %s", str(stems))
+	logging.info("token_to_stem_mapping3: %s", str(token_to_stem_mapping))
 	return tokens, stems, token_to_stem_mapping
 
 
