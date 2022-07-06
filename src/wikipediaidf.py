@@ -23,18 +23,17 @@ def filter_tokens(tokens):
 
 def stem(tokens):
 	global stemmer
-	stems = set()
-	logging.info("stems1: %s", str(stems))
+	stems = []
 	token_to_stem_mapping = dict()
-
+	logging.info("stems1: %s", str(stems))
 	for t in tokens:
 		s = stemmer.stem(t)
-		stems.add(s)
+		stems.append(s)
 		if s not in token_to_stem_mapping:
 			token_to_stem_mapping[s] = Counter()
 		token_to_stem_mapping[s][t] += 1
 	logging.info("stems2: %s", str(stems))
-	return stems, token_to_stem_mapping
+	return set(stems), token_to_stem_mapping
 
 
 def get_file_reader(filename):
@@ -55,7 +54,7 @@ def process_line(line):
 	global stemmer
 	article_json = json.loads(line)
 	tokens = set(filter_tokens(word_tokenize(article_json["text"])))
-	stems, token_to_stem_mapping = stem(tokens) if stemmer else None, None
+	stems, token_to_stem_mapping = stem(tokens) if stemmer else (None, None)
 	logging.info("stems3: %s", str(stems))
 	logging.info("token_to_stem_mapping3: %s", str(token_to_stem_mapping))
 	return tokens, stems, token_to_stem_mapping
