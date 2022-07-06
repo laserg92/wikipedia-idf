@@ -9,6 +9,7 @@ import unicodecsv as csv
 import nltk
 from nltk.tokenize import word_tokenize
 from nltk.stem.snowball import SnowballStemmer
+from pymorphy2 import MorphAnalyzer
 from bz2 import BZ2File
 from multiprocessing import Pool
 
@@ -34,6 +35,19 @@ def stem(tokens):
 	return set(stems), token_to_stem_mapping
 
 
+def lemm(tokens):
+	global lemmatizer
+	lemmas = []
+	token_to_lemm_mapping = dict()
+	for t in tokens:
+		l = lemmatizer.normal_forms(t)[0]
+		lemmas.append(l)
+		if l not in token_to_lemm_mapping:
+			token_to_lemm_mapping[l] = Counter()
+		token_to_lemm_mapping[l][t] += 1
+	return set(lemmas), token_to_lemm_mapping
+
+
 def get_file_reader(filename):
 	if filename.endswith(".bz2"):
 		return BZ2File(filename)
@@ -50,14 +64,17 @@ def get_lines(input_files):
 
 def process_line(line):
 	global stemmer
+	global lemmatizer
 	article_json = json.loads(line)
 	tokens = set(filter_tokens(word_tokenize(article_json["text"])))
 	stems, token_to_stem_mapping = stem(tokens) if stemmer else (None, None)
-	return tokens, stems, token_to_stem_mapping
+	lemmas, token_to_lemm_mapping = lemm(tokens) if stemmer else (None, None)
+	return tokens, stems, token_to_stem_mapping, lemmas, token_to_lemm_mapping
 
 
 def main():
 	global stemmer
+	global lemmatizer
 	parser = ArgumentParser()
 	parser.add_argument("-i", "--input", required=True, nargs='+', action="store", help="Input JSON files")
 	parser.add_argument("-s", "--stem", metavar="LANG", choices=SnowballStemmer.languages, help="Also produce list of stem words")
@@ -69,21 +86,29 @@ def main():
 	nltk.download("punkt")
 
 	stemmer = SnowballStemmer(args.stem) if args.stem else None
+	lemmatizer = MorphAnalyzer() if args.stem else None
 
 	tokens_c = Counter()
 	stems_c = Counter()
+	lemmas_c = Counter()
 	token_to_stem_mapping = dict()
+	token_to_lemm_mapping = dict()
 	articles = 0
 	pool = Pool(processes=args.cpus)
 
-	for tokens, stems, t_to_s_mapping in pool.imap_unordered(process_line, get_lines(args.input)):
+	for tokens, stems, t_to_s_mapping, lemmas, t_to_l_mapping in pool.imap_unordered(process_line, get_lines(args.input)):
 		tokens_c.update(tokens)
 		if args.stem:
 			stems_c.update(stems)
+			lemmas_c.update(lemmas)
 			for token in t_to_s_mapping:
 				if token not in token_to_stem_mapping:
 					token_to_stem_mapping[token] = Counter()
 				token_to_stem_mapping[token].update(t_to_s_mapping[token])
+			for token in t_to_l_mapping:
+				if token not in token_to_lemm_mapping:
+					token_to_lemm_mapping[token] = Counter()
+				token_to_lemm_mapping[token].update(t_to_l_mapping[token])
 
 		articles += 1
 		if not (articles % 100):
@@ -104,6 +129,11 @@ def main():
 			w.writerow(("stem", "frequency", "total", "idf", "most_freq_term"))
 			for s, freq in stems_c.most_common():
 				w.writerow([s, freq, articles, math.log(articles / (1.0 + freq)), token_to_stem_mapping[s].most_common(1)[0][0]])
+		with open("{}_{}".format(args.output, "lemmas.csv"), "wb") as o:
+			w = csv.writer(o, encoding='utf-8')
+			w.writerow(("lemma", "frequency", "total", "idf", "most_freq_term"))
+			for s, freq in lemmas_c.most_common():
+				w.writerow([s, freq, articles, math.log(articles / (1.0 + freq)), token_to_lemm_mapping[s].most_common(1)[0][0]])
 
 
 if __name__ == "__main__":
