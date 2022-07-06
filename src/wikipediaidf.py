@@ -33,7 +33,7 @@ def stem(tokens):
 		if s not in token_to_stem_mapping:
 			token_to_stem_mapping[s] = Counter()
 		token_to_stem_mapping[s][t] += 1
-
+	logging.info("stems2: %s", str(stems))
 	return stems, token_to_stem_mapping
 
 
@@ -56,6 +56,7 @@ def process_line(line):
 	article_json = json.loads(line)
 	tokens = set(filter_tokens(word_tokenize(article_json["text"])))
 	stems, token_to_stem_mapping = stem(tokens) if stemmer else None, None
+	logging.info("stems3: %s", str(stems))
 	return tokens, stems, token_to_stem_mapping
 
 
