@@ -79,8 +79,8 @@ def main():
 	pool = Pool(processes=args.cpus)
 
 	for tokens, stems, t_to_s_mapping in pool.imap_unordered(process_line, get_lines(args.input)):
-		logging.info("tokens: ", tokens)
-		logging.info("stems: ", stems)
+		logging.info("tokens: %s", str(tokens))
+		logging.info("stems: %s", str(stems))
 		tokens_c.update(tokens)
 		if args.stem:
 			stems_c.update(stems)
