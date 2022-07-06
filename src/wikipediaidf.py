@@ -25,14 +25,12 @@ def stem(tokens):
 	global stemmer
 	stems = []
 	token_to_stem_mapping = dict()
-	logging.info("stems1: %s", str(stems))
 	for t in tokens:
 		s = stemmer.stem(t)
 		stems.append(s)
 		if s not in token_to_stem_mapping:
 			token_to_stem_mapping[s] = Counter()
 		token_to_stem_mapping[s][t] += 1
-	logging.info("stems2: %s", str(stems))
 	return set(stems), token_to_stem_mapping
 
 
@@ -55,8 +53,6 @@ def process_line(line):
 	article_json = json.loads(line)
 	tokens = set(filter_tokens(word_tokenize(article_json["text"])))
 	stems, token_to_stem_mapping = stem(tokens) if stemmer else (None, None)
-	logging.info("stems3: %s", str(stems))
-	logging.info("token_to_stem_mapping3: %s", str(token_to_stem_mapping))
 	return tokens, stems, token_to_stem_mapping
 
 
@@ -81,8 +77,6 @@ def main():
 	pool = Pool(processes=args.cpus)
 
 	for tokens, stems, t_to_s_mapping in pool.imap_unordered(process_line, get_lines(args.input)):
-		logging.info("tokens: %s", str(tokens))
-		logging.info("stems: %s", str(stems))
 		tokens_c.update(tokens)
 		if args.stem:
 			stems_c.update(stems)
