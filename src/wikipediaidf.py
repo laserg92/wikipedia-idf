@@ -24,6 +24,7 @@ def filter_tokens(tokens):
 def stem(tokens):
 	global stemmer
 	stems = set()
+	logging.info("stems1: %s", str(stems))
 	token_to_stem_mapping = dict()
 
 	for t in tokens:
